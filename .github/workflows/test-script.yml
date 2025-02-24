@@ -1,0 +1,25 @@
+name: Run test.py every 30 seconds
+
+on:
+  schedule:
+    - cron: "*/1 * * * *"  # Runs every 1 minute (GitHub Actions doesn't support <1 min)
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Run script in loop
+        run: |
+          for i in {1..2}; do  # Run twice per minute (30s interval)
+            python scripts/test.py
+            sleep 30
+          done
