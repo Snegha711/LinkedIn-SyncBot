@@ -1,9 +1,11 @@
-name: Run test.py every 30 seconds
+name: Generate content and send for approval
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   push:
     branches:
-      - main 
+      - main
+  schedule:
+    - cron: "0 14 * * *" 
 
 jobs:
   run-script:
@@ -20,7 +22,7 @@ jobs:
         run: pip install google-generativeai
 
 
-      - name: Run script in loop
+      - name: Run script
         env:
             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} 
             ACCESS_GITHUB: ${{ secrets.ACCESS_GITHUB }}

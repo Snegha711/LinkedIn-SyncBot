@@ -1,4 +1,4 @@
-name: Approval Workflow
+name: Approve content for linkedin automatic posting
 on:
   issue_comment:
     types: [created]

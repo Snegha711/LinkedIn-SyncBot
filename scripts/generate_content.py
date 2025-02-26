@@ -9,7 +9,6 @@ def get_topic():
         topics = json.load(file)
     today = datetime.today().day
     print(f"Today's date (day): {today}")
-    print(f"Topics available: {topics}") 
     topic = topics.get(str(today))
     if topic is None:
         print("No topic found for today!")
@@ -56,15 +55,11 @@ def create_issue(text):
 
 
 
-print("testing")
 topic=get_topic()
-print(topic)
 prompt = f"""Generate a high-engagement LinkedIn post (100-150 words) on {topic} so far in a professional yet conversational tone for a junior developer in AI, IT, or software. Start with a bold statement, thought-provoking question, or personal insight to grab attention. Provide concise, valuable insights with actionable takeaways, avoiding generic statements. Ensure a smooth flow without unnecessary spaces. Use emojis naturally to highlight key points and improve readability without overuse. End with a compelling thought that sparks discussion and ask a question to invite comments. Add 4-7 relevant LinkedIn hashtags for maximum reach, ensuring they are popular yet specific"""
-print(prompt)
-text="sample testing"
-# con=generate_script(prompt)
-# print("*********")
-# print(con)
-create_issue(text)
-print("completed")
+print(f'Prompt => {prompt}')
+content=generate_script(prompt)
+print(f'***Content*** {content}')
+create_issue(content)
+print("Completed")
 
