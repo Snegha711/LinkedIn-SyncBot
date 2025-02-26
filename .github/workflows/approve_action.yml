@@ -1,0 +1,17 @@
+name: Approval Workflow
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  handle-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check comment and print result
+        run: |
+          COMMENT_BODY="${{ github.event.comment.body }}"
+          if [[ "$COMMENT_BODY" == "/approve" ]]; then
+            echo "Approved"
+          elif [[ "$COMMENT_BODY" == "/reject" ]]; then
+            echo "Not Approved"
+          fi
