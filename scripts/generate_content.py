@@ -37,7 +37,7 @@ def create_issue(text):
 
     issue_title = "Approval Required"
     issue_body = f"""## Approval Request
-    Content: {text}
+    Content: [{text}]
 
     Please approve or reject:
 

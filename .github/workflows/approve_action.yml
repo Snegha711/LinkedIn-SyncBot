@@ -7,11 +7,43 @@ jobs:
   handle-approval:
     runs-on: ubuntu-latest
     steps:
-      - name: Check comment and print result
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check comment and trigger script
+        env:
+          ACCESS_GITHUB: ${{ secrets.ACCESS_GITHUB }}
+          LINKEDIN_AUTHOR_URN: ${{ secrets.LINKEDIN_AUTHOR_URN }}
+          ACCESS_LINKEDIN: ${{ secrets.ACCESS_LINKEDIN }}
         run: |
           COMMENT_BODY="${{ github.event.comment.body }}"
-          if [[ "$COMMENT_BODY" == "/approve" ]]; then
-            echo "Approved"
-          elif [[ "$COMMENT_BODY" == "/reject" ]]; then
-            echo "Not Approved"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          REPO="${{ github.repository }}"
+
+          # Fetch the issue description
+          ISSUE_BODY=$(curl -s \
+            -H "Authorization: token $ACCESS_GITHUB" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER | jq -r '.body')
+
+          # Extract Content from issue description
+          CONTENT=$(echo "$ISSUE_BODY" | grep -oP '(?<=Content: \[).*(?=\])')
+
+          if [[ -n "$CONTENT" ]]; then
+            if [[ "$COMMENT_BODY" == *"/approve"* ]]; then
+              echo "Approved"
+              python post_to_linkedin.py "$CONTENT"
+            elif [[ "$COMMENT_BODY" == *"/reject"* ]]; then
+              echo "Not Approved"
+            fi
+
+            curl -X PATCH \
+              -H "Authorization: token $ACCESS_GITHUB" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER \
+              -d '{"state": "closed"}'
+
+            echo "Issue #$ISSUE_NUMBER closed."
+          else
+            echo "No valid content found in issue description."
           fi

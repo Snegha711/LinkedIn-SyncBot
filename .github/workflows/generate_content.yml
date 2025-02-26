@@ -25,4 +25,4 @@ jobs:
             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} 
             ACCESS_GITHUB: ${{ secrets.ACCESS_GITHUB }}
         run: |                
-          python scripts/test.py
+          python scripts/generate_content.py
