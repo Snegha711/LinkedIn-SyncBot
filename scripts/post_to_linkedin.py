@@ -3,7 +3,6 @@ import os
 import requests
 import json
 def post_to_linkedIn(text):
-    print(text)
     AUTHOR_URN = os.getenv("LINKEDIN_AUTHOR_URN")
     ACCESS_TOKEN  = os.getenv("ACCESS_LINKEDIN")
     CONTENT=text

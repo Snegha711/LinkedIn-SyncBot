@@ -32,7 +32,7 @@ jobs:
           if [[ -n "$CONTENT" ]]; then
             if [[ "$COMMENT_BODY" == *"/approve"* ]]; then
               echo "Approved"
-              python post_to_linkedin.py "$CONTENT"
+              python scripts/post_to_linkedin.py "$CONTENT"
             elif [[ "$COMMENT_BODY" == *"/reject"* ]]; then
               echo "Not Approved"
             fi
