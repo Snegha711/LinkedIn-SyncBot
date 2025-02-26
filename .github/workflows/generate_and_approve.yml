@@ -1,0 +1,111 @@
+name: Generate and Approve LinkedIn Post
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  # schedule:
+  #   - cron: "0 0 * * *" # Runs daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  generate_post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install google-generativeai
+
+      - name: Read Topic from JSON
+        id: get_topic
+        run: |
+          import json
+          from datetime import datetime
+          
+          with open('LinkedIn-SyncBot/files/topics.json', 'r') as file:
+              topics = json.load(file)
+          
+          today = datetime.today().day  # Get current day
+          topic = topics.get(str(today), "AI and the future of work")
+          
+          with open('LinkedIn-SyncBot/files/today_topic.txt', 'w') as file:
+              file.write(topic)
+        shell: python
+
+      - name: Run Python Script
+        run: |
+          python -c """
+          import google.generativeai as genai
+          
+          with open('LinkedIn-SyncBot/files/today_topic.txt', 'r') as f:
+              topic = f.read().strip()
+          
+          genai.configure(api_key='YOUR_GEMINI_API_KEY')
+          model = genai.GenerativeModel('gemini-1.5-flash-latest')
+          response = model.generate_content(topic)
+          
+          content = response.text if hasattr(response, 'text') else ""
+          content = content.replace("*", "").replace("/", "").replace("\n", "").replace("\\", "").strip()
+          
+          with open('LinkedIn-SyncBot/files/generated_post.txt', 'w') as f:
+              f.write(content)
+          """
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        shell: bash
+
+      - name: Create GitHub Issue for Approval
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const content = fs.readFileSync('LinkedIn-SyncBot/files/generated_post.txt', 'utf8');
+            const { data } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "Approve LinkedIn Post",
+              body: `### Generated LinkedIn Post\n\n${content}\n\nClick 'Approve' to proceed.`
+            });
+
+  wait_for_approval:
+    needs: generate_post
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Approval
+        uses: hmarr/auto-approve-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  print_post:
+    needs: wait_for_approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Approved Content
+        run: |
+          python -c """
+          import json
+          import requests
+          
+          token = '${{ secrets.GITHUB_TOKEN }}'
+          repo = '${{ github.repository }}'
+          
+          headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+          
+          issues_url = f'https://api.github.com/repos/{repo}/issues'
+          response = requests.get(issues_url, headers=headers)
+          issues = response.json()
+          
+          approved_issue = next((issue for issue in issues if 'Approve LinkedIn Post' in issue['title']), None)
+          
+          if approved_issue:
+              print(approved_issue['body'])
+          """
+        shell: bash
