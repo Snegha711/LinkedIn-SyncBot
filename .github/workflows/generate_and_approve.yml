@@ -27,13 +27,13 @@ jobs:
           import json
           from datetime import datetime
           
-          with open('LinkedIn-SyncBot/files/topics.json', 'r') as file:
+          with open('files/topics.json', 'r') as file:
               topics = json.load(file)
           
           today = datetime.today().day  # Get current day
           topic = topics.get(str(today), "AI and the future of work")
           
-          with open('LinkedIn-SyncBot/files/today_topic.txt', 'w') as file:
+          with open('files/today_topic.txt', 'w') as file:
               file.write(topic)
         shell: python
 
@@ -42,7 +42,7 @@ jobs:
           python -c """
           import google.generativeai as genai
           
-          with open('LinkedIn-SyncBot/files/today_topic.txt', 'r') as f:
+          with open('files/today_topic.txt', 'r') as f:
               topic = f.read().strip()
           
           genai.configure(api_key='YOUR_GEMINI_API_KEY')
@@ -52,7 +52,7 @@ jobs:
           content = response.text if hasattr(response, 'text') else ""
           content = content.replace("*", "").replace("/", "").replace("\n", "").replace("\\", "").strip()
           
-          with open('LinkedIn-SyncBot/files/generated_post.txt', 'w') as f:
+          with open('files/generated_post.txt', 'w') as f:
               f.write(content)
           """
         env:
@@ -65,7 +65,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const content = fs.readFileSync('LinkedIn-SyncBot/files/generated_post.txt', 'utf8');
+            const content = fs.readFileSync('files/generated_post.txt', 'utf8');
             const { data } = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
