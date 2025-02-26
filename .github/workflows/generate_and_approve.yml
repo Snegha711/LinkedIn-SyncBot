@@ -24,7 +24,7 @@ jobs:
       - name: Generate LinkedIn Post
         id: generate_post
         run: |
-          python -c """
+          python - <<EOF
           import json
           import google.generativeai as genai
           from datetime import datetime
@@ -54,7 +54,7 @@ jobs:
           print(content)
           
           print(f"::set-output name=post_content::{content}")
-          """
+          EOF
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
