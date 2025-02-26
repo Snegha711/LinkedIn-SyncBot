@@ -1,4 +1,4 @@
-name: Generate and Approve LinkedIn Post
+name: Testing
 
 on:
   workflow_dispatch: 
@@ -21,29 +21,27 @@ jobs:
       - name: Install Dependencies
         run: pip install google-generativeai
 
-      - name: Read Topic from JSON
-        id: get_topic
+      - name: Generate LinkedIn Post
+        id: generate_post
         run: |
+          python -c """
           import json
+          import google.generativeai as genai
           from datetime import datetime
           
           with open('files/topics.json', 'r') as file:
               topics = json.load(file)
           
           today = datetime.today().day  # Get current day
-          topic = topics.get(str(today), "AI and the future of work")
+          print(f"Today's date (day): {today}")
+          print(f"Topics available: {topics}")
           
-          with open('files/today_topic.txt', 'w') as file:
-              file.write(topic)
-        shell: python
-
-      - name: Run Python Script
-        run: |
-          python -c """
-          import google.generativeai as genai
+          topic = topics.get(str(today))
+          if topic is None:
+              print("No topic found for today!")
+              exit(1)
           
-          with open('files/today_topic.txt', 'r') as f:
-              topic = f.read().strip()
+          print(f"Selected topic: {topic}")
           
           genai.configure(api_key='YOUR_GEMINI_API_KEY')
           model = genai.GenerativeModel('gemini-1.5-flash-latest')
@@ -52,58 +50,45 @@ jobs:
           content = response.text if hasattr(response, 'text') else ""
           content = content.replace("*", "").replace("/", "").replace("\n", "").replace("\\", "").strip()
           
-          with open('files/generated_post.txt', 'w') as f:
-              f.write(content)
+          print("Generated Content:")
+          print(content)
+          
+          print(f"::set-output name=post_content::{content}")
           """
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        shell: bash
 
       - name: Create GitHub Issue for Approval
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const content = fs.readFileSync('files/generated_post.txt', 'utf8');
-            const { data } = await github.rest.issues.create({
+            const content = `${{ steps.generate_post.outputs.post_content }}`;
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: "Approve LinkedIn Post",
               body: `### Generated LinkedIn Post\n\n${content}\n\nClick 'Approve' to proceed.`
             });
 
-  wait_for_approval:
+  print_post:
     needs: generate_post
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Approval
-        uses: hmarr/auto-approve-action@v3
+      - name: Get Approved Content from Issue
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-  print_post:
-    needs: wait_for_approval
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print Approved Content
-        run: |
-          python -c """
-          import json
-          import requests
-          
-          token = '${{ secrets.GITHUB_TOKEN }}'
-          repo = '${{ github.repository }}'
-          
-          headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
-          
-          issues_url = f'https://api.github.com/repos/{repo}/issues'
-          response = requests.get(issues_url, headers=headers)
-          issues = response.json()
-          
-          approved_issue = next((issue for issue in issues if 'Approve LinkedIn Post' in issue['title']), None)
-          
-          if approved_issue:
-              print(approved_issue['body'])
-          """
-        shell: bash
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "approved"
+            });
+            if (issues.data.length === 0) {
+              console.log("No approved post found.");
+              process.exit(1);
+            }
+            const approvedPost = issues.data[0].body;
+            console.log("Approved LinkedIn Post Content:\n", approvedPost);
