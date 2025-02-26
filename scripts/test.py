@@ -20,5 +20,8 @@ def generate_script(topic):
 
 print("testing")
 topic = """Generate a high-engagement LinkedIn post (100-150 words) on Lessons I’ve learned in my developer journey so far in a professional yet conversational tone for a junior developer in AI, IT, or software. Start with a bold statement, thought-provoking question, or personal insight to grab attention. Provide concise, valuable insights with actionable takeaways, avoiding generic statements. Ensure a smooth flow without unnecessary spaces. Use emojis naturally to highlight key points and improve readability without overuse. End with a compelling thought that sparks discussion and ask a question to invite comments. Add 4-7 relevant LinkedIn hashtags for maximum reach, ensuring they are popular yet specific"""
-generate_script(topic)
+print(topic)
+con=generate_script(topic)
+print("*********")
+print(con)
 
