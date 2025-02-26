@@ -34,7 +34,7 @@ def create_issue(text):
     repo = "Snegha711/LinkedIn-SyncBot"  
     token = os.getenv("ACCESS_GITHUB")
 
-    issue_title = "Approval Required"
+    issue_title = "Approve content for LinkedIn post"
     issue_body = f"""## Approval Request
     Content: [{text}]
 
@@ -56,10 +56,34 @@ def create_issue(text):
 
 
 topic=get_topic()
-prompt = f"""Generate a high-engagement LinkedIn post (100-150 words) on {topic} so far in a professional yet conversational tone for a junior developer in AI, IT, or software. Start with a bold statement, thought-provoking question, or personal insight to grab attention. Provide concise, valuable insights with actionable takeaways, avoiding generic statements. Ensure a smooth flow without unnecessary spaces. Use emojis naturally to highlight key points and improve readability without overuse. End with a compelling thought that sparks discussion and ask a question to invite comments. Add 4-7 relevant LinkedIn hashtags for maximum reach, ensuring they are popular yet specific"""
-print(f'Prompt => {prompt}')
+prompt = f"""
+Generate a high-engagement LinkedIn post (100-150 words) on {topic} with the following structure:
+
+🔹 **Hook (1-2 lines):**
+
+- Start with a bold statement, thought-provoking question, or personal insight.
+- Ensure it's concise and attention-grabbing.
+
+🔹 **Main Content (3-5 short paragraphs, spaced apart):**
+
+- Provide insights with short, punchy sentences.
+- Use line breaks between sentences for readability.
+- Keep it valuable and actionable—avoid generic statements.
+- Include bullet points or emojis to emphasize key takeaways.
+
+🔹 **Call to Action (1-2 lines):**
+
+- End with a compelling thought or question to invite engagement.
+- Encourage readers to comment and share their opinions.
+
+✅ **Format for LinkedIn readability:**
+
+- Short paragraphs with spaces.
+- Bullet points & emojis for visual appeal.
+- Engaging CTA to boost interaction.
+
+🔹 **Include 4-7 relevant LinkedIn hashtags for maximum reach.**
+"""  
 content=generate_script(prompt)
-print(f'***Content*** {content}')
 create_issue(content)
-print("Completed")
 

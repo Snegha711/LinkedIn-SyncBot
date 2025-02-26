@@ -28,8 +28,6 @@ def post_to_linkedIn(text):
         }
     }
     response = requests.post(url, headers=headers, data=json.dumps(payload))
-    print("Status Code:", response.status_code)
-    print("Response:", response.json())
 
 
 if __name__ == "__main__":
