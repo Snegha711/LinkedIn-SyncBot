@@ -1,7 +1,7 @@
 name: Generate content and send for approval
 on:
-  schedule:
-    - cron: "0 14 * * *" 
+  workflow_dispatch:
+
 
 jobs:
   run-script:
